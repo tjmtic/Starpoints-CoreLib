@@ -20,6 +20,7 @@ sits behind a port.
 | projection | The camera model: look direction + field of view → screen positions, frustum culling, tap hit-testing |
 | presenter | UI-free sky state for the app's screens to render |
 | `ports/` | What the core needs from the platform, as interfaces |
+| `catalog/` (repo root) | The bundled sky data: 41,411 stars to magnitude 8 in the SPC1 format, 541 proper names, the 88 constellations' names, label positions and stick figures. Built from d3-celestial (BSD-3-Clause) by `scripts/build_catalog.py`, pinned to one commit and reproducible; see `catalog/ATTRIBUTION.md` |
 
 The astronomy follows Jean Meeus, *Astronomical Algorithms* (2nd ed.); tests check the book's
 worked examples. The model never computes astronomy: anything written in words is built from
