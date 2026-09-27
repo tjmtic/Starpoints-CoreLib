@@ -3,6 +3,12 @@
 build:
   maxIssues: 0
 
+style:
+  MagicNumber:
+    # Astronomy is published coefficients (Meeus, Astronomical Algorithms): naming each term of
+    # a series adds nothing but noise. Outside math/ the rule stands; tests are excluded by default.
+    excludes: ['**/commonTest/**', '**/jvmTest/**', '**/iosTest/**', '**/core/math/**']
+
 naming:
   FunctionNaming:
     # Composables are PascalCase by convention.

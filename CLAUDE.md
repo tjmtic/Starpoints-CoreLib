@@ -1,9 +1,19 @@
-# kmp-app-template — project conventions
+# Starpoints-CoreLib — project conventions
 
-A new app created from this template: rename it first (`scripts/rename.sh`, see README).
+The domain core of Starpoints: pure Kotlin Multiplatform in `:core-lib`, published for the private
+app repo (tjmtic/Starpoints) to consume. Public repo: nothing secret, no keys, no private prompts.
 Style is a tool, not a review subject: ktfmt (kotlinlang) + detekt at zero issues — run
 `bash .claude/scripts/format-changed.sh` before you are done, never add a detekt baseline.
 
+## Core rules
+- No UI (no Compose), no platform types, no I/O. The platform is reached only through interfaces in
+  `ports/`; the app implements them. Dependencies point inward.
+- Astronomy follows Meeus, *Astronomical Algorithms*: cite the chapter in the KDoc and test against
+  its worked examples. Angles in degrees at API edges, radians inside math functions; time is UTC.
+- The catalog is always drawn: nothing here hides, fades or recalibrates catalog stars from camera
+  or sky conditions. A limiting magnitude comes from the field of view or an explicit user setting.
+- Any generated or fictional text (the Guide) is a separate type from computed facts and is never
+  mixed into them.
 
 ## Stack
 - Kotlin Multiplatform, Compose Multiplatform + Material 3, shared UI on both targets.
