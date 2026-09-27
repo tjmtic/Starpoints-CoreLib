@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.kotlinSerialization)
     `maven-publish`
 }
 
@@ -23,7 +24,11 @@ kotlin {
     iosSimulatorArm64()
 
     sourceSets {
-        commonMain.dependencies { implementation(libs.kotlinx.coroutines.core) }
+        commonMain.dependencies {
+            implementation(libs.kotlinx.coroutines.core)
+            // The catalog's JSON files (names, constellations, lines) are parsed in the core.
+            implementation(libs.kotlinx.serialization.json)
+        }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)
