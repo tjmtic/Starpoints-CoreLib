@@ -1,5 +1,6 @@
 package com.abyxcz.starpoints.core.presenter
 
+import com.abyxcz.starpoints.core.math.Horizontal
 import com.abyxcz.starpoints.core.math.normalizeDegrees
 import com.abyxcz.starpoints.core.projection.LookDirection
 
@@ -56,3 +57,20 @@ fun SkyView.zoom(scale: Double): SkyView {
 
 /** Toggles night mode. */
 fun SkyView.toggleNightMode(): SkyView = copy(nightMode = !nightMode)
+
+/**
+ * Centres the view on a target: looks straight at it (azimuth and altitude from it, roll 0),
+ * keeping the field of view and night mode.
+ *
+ * @param target the sky direction to look at.
+ * @return the centred view.
+ */
+fun SkyView.centeredOn(target: Horizontal): SkyView =
+    copy(
+        look =
+            LookDirection(
+                azimuthDegrees = target.azimuthDegrees,
+                altitudeDegrees = target.altitudeDegrees,
+                rollDegrees = 0.0,
+            )
+    )
