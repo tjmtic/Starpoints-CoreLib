@@ -69,10 +69,22 @@ fun project(
     return ScreenPoint(x, y)
 }
 
-private fun directionToVec(h: Horizontal): Vec3 {
+internal fun directionToVec(h: Horizontal): Vec3 {
     val az = h.azimuthDegrees.toRadians()
     val alt = h.altitudeDegrees.toRadians()
     return Vec3(sin(az) * cos(alt), cos(az) * cos(alt), sin(alt))
+}
+
+internal data class CameraBasis(val forward: Vec3, val right: Vec3, val up: Vec3)
+
+internal fun cameraBasis(look: LookDirection): CameraBasis {
+    val forward = directionToVec(Horizontal(look.altitudeDegrees, look.azimuthDegrees)).normalized()
+    val right = computeRight(forward, look.azimuthDegrees)
+    val up = right cross forward
+    val rollRad = look.rollDegrees.toRadians()
+    val cosRoll = cos(rollRad)
+    val sinRoll = sin(rollRad)
+    return CameraBasis(forward, right * cosRoll + up * sinRoll, up * cosRoll - right * sinRoll)
 }
 
 private fun computeRight(forward: Vec3, azimuthDegrees: Double): Vec3 {
