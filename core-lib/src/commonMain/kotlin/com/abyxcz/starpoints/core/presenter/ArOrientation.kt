@@ -16,18 +16,29 @@ private const val VERTICAL_LIMIT_DEGREES = 0.5
 
 fun lookDirectionFrom(attitude: DeviceAttitude): LookDirection {
     val (row0, row1, row2) = attitude.rotationMatrix.chunked(ROW_SIZE)
-    val right = Vec3(row0[0], row1[0], row2[0])
-    val up = Vec3(row0[1], row1[1], row2[1])
-    val forward = -Vec3(row0[2], row1[2], row2[2])
+    val look =
+        lookFrom(
+            right = Vec3(row0[0], row1[0], row2[0]),
+            up = Vec3(row0[1], row1[1], row2[1]),
+            forward = -Vec3(row0[2], row1[2], row2[2]),
+        )
+    // In R's own frame first: the declination turns only the returned azimuth.
+    return look.copy(
+        azimuthDegrees =
+            (look.azimuthDegrees + attitude.magneticDeclinationDegrees).normalizeDegrees()
+    )
+}
+
+/**
+ * The look direction of a camera whose axes are [right], [up] and [forward] (unit vectors in ENU).
+ * The roll is measured against the basis [project] builds for the same look, so [project]
+ * reproduces that camera. Shared by [lookDirectionFrom] and [smooth].
+ */
+internal fun lookFrom(right: Vec3, up: Vec3, forward: Vec3): LookDirection {
     val altitude = asin(forward.z.coerceIn(-1.0, 1.0)).toDegrees()
     val heading = if (abs(altitude) > VERTICAL_DEGREES - VERTICAL_LIMIT_DEGREES) up else forward
-    // In R's own frame: the roll is measured before the declination turns the azimuth.
-    val frameAzimuth = atan2(heading.x, heading.y).toDegrees().normalizeDegrees()
-    val basis = cameraBasis(LookDirection(frameAzimuth, altitude, 0.0))
+    val azimuth = atan2(heading.x, heading.y).toDegrees().normalizeDegrees()
+    val basis = cameraBasis(LookDirection(azimuth, altitude, 0.0))
     val roll = atan2(right dot basis.up, right dot basis.right).toDegrees()
-    return LookDirection(
-        azimuthDegrees = (frameAzimuth + attitude.magneticDeclinationDegrees).normalizeDegrees(),
-        altitudeDegrees = altitude,
-        rollDegrees = roll,
-    )
+    return LookDirection(azimuthDegrees = azimuth, altitudeDegrees = altitude, rollDegrees = roll)
 }
