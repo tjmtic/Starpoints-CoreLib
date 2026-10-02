@@ -57,8 +57,9 @@ fun visibleStars(
     observer: Observer,
     epochMillis: Long,
     screen: ScreenSize,
+    magnitudeLimit: Double = magnitudeLimitFor(view.fieldOfViewDegrees),
 ): List<SkyPoint> {
-    val limit = magnitudeLimitFor(view.fieldOfViewDegrees)
+    val limit = magnitudeLimit
     val jd = julianDate(epochMillis)
     val lst = localSiderealTimeDegrees(jd, observer.longitudeEastDegrees)
     return stars
