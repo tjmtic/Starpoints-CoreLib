@@ -59,31 +59,49 @@ fun visibleStars(
     screen: ScreenSize,
     magnitudeLimit: Double = magnitudeLimitFor(view.fieldOfViewDegrees),
 ): List<SkyPoint> {
-    val limit = magnitudeLimit
     val jd = julianDate(epochMillis)
     val lst = localSiderealTimeDegrees(jd, observer.longitudeEastDegrees)
+    val positions = stars.map { star ->
+        equatorialToHorizontal(
+            star.rightAscensionDegrees.toDouble(),
+            star.declinationDegrees.toDouble(),
+            observer.latitudeDegrees,
+            lst,
+        )
+    }
+    return visibleStars(stars, positions, view, screen, magnitudeLimit)
+}
+
+/**
+ * Projects stars to screen points from pre-computed horizontal positions.
+ *
+ * @param stars the catalog records.
+ * @param positions the horizontal positions, in [stars] order.
+ * @param view the sky view state.
+ * @param screen the screen dimensions.
+ * @param magnitudeLimit faintest magnitude to draw.
+ * @return the visible stars as screen points, brightest first.
+ */
+fun visibleStars(
+    stars: List<StarRecord>,
+    positions: List<Horizontal>,
+    view: SkyView,
+    screen: ScreenSize,
+    magnitudeLimit: Double = magnitudeLimitFor(view.fieldOfViewDegrees),
+): List<SkyPoint> {
     return stars
-        .asSequence()
-        .filter { it.magnitude <= limit }
-        .mapNotNull { pointFor(it, view, observer.latitudeDegrees, lst, screen) }
+        .mapIndexed { index, star -> star to positions[index] }
+        .filter { (star, _) -> star.magnitude <= magnitudeLimit }
+        .mapNotNull { (star, horizontal) -> pointFor(star, horizontal, view, screen) }
         .sortedBy { it.magnitude }
-        .toList()
 }
 
 private fun pointFor(
     star: StarRecord,
+    horizontal: Horizontal,
     view: SkyView,
-    latitudeDegrees: Double,
-    lst: Double,
     screen: ScreenSize,
 ): SkyPoint? {
-    val horizontal =
-        equatorialToHorizontal(
-            star.rightAscensionDegrees.toDouble(),
-            star.declinationDegrees.toDouble(),
-            latitudeDegrees,
-            lst,
-        )
     val altitude = apparentAltitudeDegrees(horizontal.altitudeDegrees)
     if (altitude < 0.0) return null
     return project(
