@@ -1,5 +1,7 @@
 package com.abyxcz.starpoints.core.guide
 
+import com.abyxcz.starpoints.core.catalog.Constellation
+import com.abyxcz.starpoints.core.catalog.ConstellationFigure
 import com.abyxcz.starpoints.core.catalog.StarRecord
 import com.abyxcz.starpoints.core.presenter.colorName
 import com.abyxcz.starpoints.core.presenter.formatDeclination
@@ -53,6 +55,48 @@ fun starFactSheet(
         add(Fact("declination", formatDeclination(star.declinationDegrees.toDouble())))
     }
     return FactSheet(GuideAnchor.Star(star.id), name ?: designation, facts)
+}
+
+/**
+ * The fact sheet for the constellation [id]: one sheet per anchor. Its [parts] are the catalog
+ * entries with that id, usually one; Serpens has two (Caput and Cauda), which share the anchor and
+ * the one merged [figure], so its sheet is titled by the words their names share ("Serpens") and
+ * lists both parts.
+ */
+fun constellationFactSheet(
+    id: String,
+    parts: List<Constellation>,
+    figure: ConstellationFigure?,
+): FactSheet {
+    val own = parts.filter { it.id == id }
+    require(own.isNotEmpty()) { "no catalog entry for constellation $id" }
+    require(figure == null || figure.id == id) { "figure ${figure?.id} is not $id's" }
+    val title = sharedWords(own.map { it.name })
+    val facts = buildList {
+        add(Fact("name", title))
+        add(Fact("abbreviation", id))
+        if (own.size == 1) {
+            add(Fact("label position", positionOf(own.single())))
+        } else {
+            add(Fact("parts", own.joinToString(", ") { it.name }))
+            add(Fact("label positions", own.joinToString("; ") { "${it.name} ${positionOf(it)}" }))
+        }
+        figure?.let { f -> add(Fact("figure lines", f.polylines.sumOf { it.size - 1 }.toString())) }
+    }
+    return FactSheet(GuideAnchor.Constellation(id), title, facts)
+}
+
+/** A constellation label's position, as `18h 36m 00.0s, +30° 00′ 00″`. */
+private fun positionOf(part: Constellation): String =
+    formatRightAscension(part.labelRaDegrees) + ", " + formatDeclination(part.labelDecDegrees)
+
+/** The leading words all [names] share ("Serpens"), or the one name when there is only one. */
+private fun sharedWords(names: List<String>): String {
+    val words = names.map { it.split(' ') }
+    val shared =
+        words.first().indices.takeWhile { i -> words.all { it.getOrNull(i) == words.first()[i] } }
+    return if (shared.isEmpty()) names.first()
+    else words.first().take(shared.size).joinToString(" ")
 }
 
 /** [value] rounded to two decimals, as `0.03` or `-1.44`. */
