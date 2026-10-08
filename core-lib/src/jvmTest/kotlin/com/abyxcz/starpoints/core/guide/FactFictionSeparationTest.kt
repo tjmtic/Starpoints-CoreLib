@@ -28,7 +28,13 @@ class FactFictionSeparationTest {
         listOf(FactSheet::class.java, Fact::class.java, StarFacts::class.java)
 
     private val fictionTypes: List<Class<*>> =
-        listOf(GuideEntry::class.java, GuideOrigin::class.java, GuideVoice::class.java)
+        listOf(
+            GuideEntry::class.java,
+            GuideOrigin::class.java,
+            GuideVoice::class.java,
+            GuidePack::class.java,
+            PackGuideSource::class.java,
+        )
 
     /** Every class named by [type]: array elements, type arguments and bounds, recursively. */
     private fun classesIn(type: Type): List<Class<*>> =
