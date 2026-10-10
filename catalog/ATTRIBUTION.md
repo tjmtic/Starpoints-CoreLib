@@ -11,6 +11,10 @@ What was changed, by `scripts/build_catalog.py`:
 - `star-names.json`: the proper names from `data/starnames.json` for those stars.
 - `constellations.json`: the English names and label positions from `data/constellations.json`.
 - `constellation-lines.json`: `data/constellations.lines.json` with right ascension moved to [0, 360).
+- `deep-sky.json`: the 110 Messier objects of `data/messier.json`, right ascension moved to
+  [0, 360), the size text ("190x60", arcminutes) split into numbers, empty fields left out, and the
+  apostrophes in names made plain ('). d3-celestial took them from "Messier Objects with Data" by
+  Hartmut Frommert, SEDS (http://messier.seds.org/data.html).
 
 An app that ships these files must reproduce this notice and the license below in its
 documentation or an in-app screen (clause 2).
