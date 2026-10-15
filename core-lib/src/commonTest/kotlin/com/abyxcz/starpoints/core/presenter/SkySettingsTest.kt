@@ -2,6 +2,7 @@ package com.abyxcz.starpoints.core.presenter
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 private const val TOLERANCE = 1e-9
@@ -41,6 +42,22 @@ class SkySettingsTest {
         val settings = SkySettings(showConstellationLines = false, magnitudeOffset = 1.5)
         val decoded = decodeSettings(encodeSettings(settings))
         assertEquals(settings, decoded)
+    }
+
+    @Test
+    fun onDeviceWritingIsOnByDefaultAndForSettingsSavedBeforeIt() {
+        assertTrue(SkySettings().onDeviceWriting)
+        val saved =
+            """{"showConstellationLines":false,"showStarNames":true,""" +
+                """"showConstellationNames":true,"magnitudeOffset":1.0}"""
+        assertTrue(decodeSettings(saved).onDeviceWriting)
+        assertFalse(decodeSettings(saved).showConstellationLines)
+    }
+
+    @Test
+    fun onDeviceWritingOffRoundTrips() {
+        val off = SkySettings(onDeviceWriting = false)
+        assertEquals(off, decodeSettings(encodeSettings(off)))
     }
 
     @Test
