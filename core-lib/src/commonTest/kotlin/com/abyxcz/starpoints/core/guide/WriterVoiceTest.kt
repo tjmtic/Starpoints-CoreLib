@@ -9,7 +9,7 @@ class WriterVoiceTest {
         """{"id": "plain", "name": "Plain", "fiction": false, "summary": "Clear notes.",
            "rules": ["One paragraph.", "All ages."],
            "length": {"minWords": 30, "maxWords": 100},
-           "checks": {"numbers": "fact-sheet-only", "denyPhrases": ["towel"]}}"""
+           "checks": {"numbers": "fact-sheet-only", "denyPhrases": ["towel"], "language": "en"}}"""
 
     @Test
     fun aVoiceFileReadsIntoAWriterVoice() {
@@ -21,6 +21,7 @@ class WriterVoiceTest {
         assertEquals(100, voice.maxWords)
         assertEquals(NumberRule.FACT_SHEET_ONLY, voice.numbers)
         assertEquals(listOf("towel"), voice.denyPhrases)
+        assertEquals("en", voice.language)
     }
 
     @Test
@@ -32,6 +33,7 @@ class WriterVoiceTest {
             )
         assertEquals(NumberRule.FACT_SHEET_ONLY, voice.numbers)
         assertEquals(emptyList(), voice.denyPhrases)
+        assertEquals(null, voice.language)
     }
 
     @Test

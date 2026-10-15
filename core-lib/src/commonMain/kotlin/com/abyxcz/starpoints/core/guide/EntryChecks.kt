@@ -8,6 +8,58 @@ private val WORD = Regex("""\S+""")
 private val SPACES = Regex("""\s+""")
 /** The end of a sentence: an end mark, then any closing quotes or bracket, then nothing. */
 private val SENTENCE_END = Regex("""[.!?]["'\u201d\u2019)]*$""")
+/**
+ * Common English words. In English prose they are about a third of the words; in another language
+ * almost none. The share is how [checkEntry] tells a voice that wants English it got something
+ * else.
+ */
+private val ENGLISH_WORDS =
+    setOf(
+        "the",
+        "of",
+        "and",
+        "to",
+        "a",
+        "in",
+        "is",
+        "it",
+        "you",
+        "that",
+        "with",
+        "for",
+        "as",
+        "on",
+        "are",
+        "this",
+        "be",
+        "at",
+        "by",
+        "your",
+        "from",
+        "its",
+        "an",
+        "or",
+        "but",
+        "not",
+        "can",
+        "will",
+        "has",
+        "have",
+        "their",
+        "they",
+        "was",
+        "were",
+        "which",
+        "who",
+        "here",
+        "there",
+    )
+
+/** Below this share of [ENGLISH_WORDS], a body is not English. */
+private const val MIN_ENGLISH_SHARE = 0.1
+private const val ENGLISH = "en"
+private val LETTERS = Regex("""[^\p{L}']+""")
+
 private val APOSTROPHES = setOf('’', '‘', '´', '`')
 
 /**
@@ -43,9 +95,10 @@ fun plainText(text: String): String =
  * What is wrong with [body] as an entry in [voice] about the object of [sheet] (null for a topic):
  * its length in words; whether it ends a sentence (a reply cut off mid-sentence does not); any
  * number, with its sign, that appears nowhere in the fact sheet (when the voice allows only those;
- * none at all for a topic); and any of the voice's denied phrases, matched on [plainText]. Empty
- * when the entry passes. The number check compares numbers, not what they measure: a fact sheet's
- * 38 (degrees) lets "38 stars" through.
+ * none at all for a topic); whether it is in English, when the voice's [WriterVoice.language] is
+ * `en`; and any of the voice's denied phrases, matched on [plainText]. Empty when the entry passes.
+ * The number check compares numbers, not what they measure: a fact sheet's 38 (degrees) lets "38
+ * stars" through.
  */
 fun checkEntry(body: String, voice: WriterVoice, sheet: FactSheet?): List<String> {
     val problems = mutableListOf<String>()
@@ -60,9 +113,18 @@ fun checkEntry(body: String, voice: WriterVoice, sheet: FactSheet?): List<String
         if (stray.isNotEmpty())
             problems += "states ${stray.sorted()}, which the fact sheet does not"
     }
+    if (voice.language == ENGLISH && englishShare(body) < MIN_ENGLISH_SHARE) {
+        problems += "is not in English"
+    }
     val plain = plainText(body)
     voice.denyPhrases
         .filter { plainText(it) in plain }
         .forEach { problems += "uses the denied phrase '$it'" }
     return problems
+}
+
+/** The share of [text]'s words that are common English words; 0 for no words. */
+internal fun englishShare(text: String): Double {
+    val words = text.lowercase().split(LETTERS).filter { it.isNotEmpty() }
+    return if (words.isEmpty()) 0.0 else words.count { it in ENGLISH_WORDS }.toDouble() / words.size
 }
