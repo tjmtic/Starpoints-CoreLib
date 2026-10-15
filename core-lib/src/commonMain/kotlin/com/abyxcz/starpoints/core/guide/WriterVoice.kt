@@ -16,6 +16,8 @@ import kotlinx.serialization.json.Json
  * @property maxWords the longest an entry may be, in words.
  * @property numbers which numbers an entry may state.
  * @property denyPhrases phrases no entry may contain; never shown to the model.
+ * @property language the language entries must be written in, when the voice requires one; `en`
+ *   (English) is the one [checkEntry] can tell. Small models drift into other languages.
  */
 data class WriterVoice(
     val voice: GuideVoice,
@@ -25,6 +27,7 @@ data class WriterVoice(
     val maxWords: Int,
     val numbers: NumberRule = NumberRule.FACT_SHEET_ONLY,
     val denyPhrases: List<String> = emptyList(),
+    val language: String? = null,
 ) {
     init {
         require(minWords in 1..maxWords) { "voice ${voice.id}: bad length $minWords..$maxWords" }
@@ -60,6 +63,7 @@ private data class VoiceProfileFile(
 private data class ChecksFile(
     val numbers: NumberRule = NumberRule.FACT_SHEET_ONLY,
     val denyPhrases: List<String> = emptyList(),
+    val language: String? = null,
 )
 
 /**
@@ -67,7 +71,7 @@ private data class ChecksFile(
  * ```
  * {"id": "plain", "name": "Plain", "fiction": false, "summary": "...", "rules": ["..."],
  *  "length": {"minWords": 30, "maxWords": 100},
- *  "checks": {"numbers": "fact-sheet-only", "denyPhrases": []}}
+ *  "checks": {"numbers": "fact-sheet-only", "denyPhrases": [], "language": "en"}}
  * ```
  *
  * Throws [IllegalArgumentException] for malformed JSON, an unknown key, an invalid voice id or
@@ -83,5 +87,6 @@ fun parseWriterVoice(json: String): WriterVoice {
         maxWords = file.length.maxWords,
         numbers = file.checks.numbers,
         denyPhrases = file.checks.denyPhrases,
+        language = file.checks.language,
     )
 }

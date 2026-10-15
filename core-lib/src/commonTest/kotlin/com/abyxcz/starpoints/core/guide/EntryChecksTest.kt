@@ -90,6 +90,22 @@ class EntryChecksTest {
     }
 
     @Test
+    fun aVoiceThatWantsEnglishRefusesAnotherLanguage() {
+        val english = plain.copy(language = "en", maxWords = 40)
+        val italian = "Altair si vede in un cielo sereno, ed \u00e8 facile da osservare per tutti."
+        assertEquals(listOf("is not in English"), checkEntry(italian, english, vegaSheet))
+        val prose = "Travellers find Vega high in the summer sky, and it is easy to spot."
+        assertEquals(emptyList(), checkEntry(prose, english, vegaSheet))
+        assertEquals(emptyList(), checkEntry(italian, english.copy(language = null), vegaSheet))
+    }
+
+    @Test
+    fun englishShareCountsCommonWords() {
+        assertEquals(0.5, englishShare("The star is bright"))
+        assertEquals(0.0, englishShare(""))
+    }
+
+    @Test
     fun aDeniedPhraseIsCaughtWhateverItsCaseQuotesOrLineBreaks() {
         assertEquals(
             listOf("uses the denied phrase 'don't panic'"),
