@@ -5,6 +5,7 @@ import com.abyxcz.starpoints.core.guide.WriterFixtures.guide
 import com.abyxcz.starpoints.core.guide.WriterFixtures.plain
 import com.abyxcz.starpoints.core.guide.WriterFixtures.vegaSheet
 import com.abyxcz.starpoints.core.ports.TextWriter
+import com.abyxcz.starpoints.core.ports.WriteRequest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -20,9 +21,9 @@ class OnDeviceGuideSourceTest {
         override val model = "TestModel-1B"
         val calls = mutableListOf<Triple<String, Int, Int>>()
 
-        override suspend fun write(prompt: String, maxTokens: Int, seed: Int): String {
-            calls += Triple(prompt, maxTokens, seed)
-            return replies[minOf(seed, replies.size) - 1]
+        override suspend fun write(request: WriteRequest): String {
+            calls += Triple(request.prompt, request.maxTokens, request.seed)
+            return replies[minOf(request.seed, replies.size) - 1]
         }
     }
 
@@ -136,7 +137,7 @@ class OnDeviceGuideSourceTest {
             object : TextWriter {
                 override val model = "Slow"
 
-                override suspend fun write(prompt: String, maxTokens: Int, seed: Int): String {
+                override suspend fun write(request: WriteRequest): String {
                     release.await()
                     return good
                 }
@@ -166,7 +167,7 @@ class OnDeviceGuideSourceTest {
             object : TextWriter {
                 override val model = "Broken"
 
-                override suspend fun write(prompt: String, maxTokens: Int, seed: Int): String =
+                override suspend fun write(request: WriteRequest): String =
                     error("no model on this device")
             }
         assertFailsWith<IllegalStateException> { source(failing).entryFor(vega) }
