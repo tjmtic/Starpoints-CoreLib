@@ -2,6 +2,7 @@ package com.abyxcz.starpoints.core.guide
 
 import com.abyxcz.starpoints.core.ports.GuideSource
 import com.abyxcz.starpoints.core.ports.TextWriter
+import com.abyxcz.starpoints.core.ports.WriteRequest
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -113,9 +114,8 @@ class OnDeviceGuideSource(
         val maxTokens = voice.maxWords * TOKENS_PER_WORD
         val body =
             (1..attempts).firstNotNullOfOrNull { seed ->
-                fitToLength(cleanBody(writer.write(prompt, maxTokens, seed)), voice).takeIf {
-                    checkEntry(it, voice, sheet).isEmpty()
-                }
+                fitToLength(cleanBody(writer.write(WriteRequest(prompt, maxTokens, seed))), voice)
+                    .takeIf { checkEntry(it, voice, sheet).isEmpty() }
             }
         return body?.let {
             GuideEntry(
