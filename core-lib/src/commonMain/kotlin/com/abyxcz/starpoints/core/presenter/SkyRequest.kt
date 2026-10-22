@@ -121,6 +121,25 @@ fun parseSkyRequest(reply: String, request: String): SkyRequest {
 
 /** Reads plain-language requests with [writer]: deterministic, grammar-shaped, then parsed. */
 class SkyRequestReader(private val writer: TextWriter) {
+    /**
+     * Has [writer] read the system turn now, with nothing after it, so a request made soon after
+     * starts from it (a writer that reuses its last prompt's prefix reads only the request then).
+     * Worth calling when the reader is about to ask — a search field opening. Exceptions from
+     * [writer] reach the caller.
+     */
+    suspend fun warmUp() {
+        writer.write(
+            WriteRequest(
+                prompt = "",
+                maxTokens = 1,
+                seed = 1,
+                system = REQUEST_SYSTEM,
+                grammar = REQUEST_GRAMMAR,
+                temperature = 0f,
+            )
+        )
+    }
+
     /** What [request] asks for. Exceptions from [writer] reach the caller. */
     suspend fun read(request: String): SkyRequest {
         val text = request.trim().take(MAX_REQUEST_CHARS)
