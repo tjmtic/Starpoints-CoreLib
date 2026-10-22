@@ -87,6 +87,25 @@ class SkyRequestTest {
     }
 
     @Test
+    fun warmingUpReadsTheSystemTurnWithNothingAfterIt() = runTest {
+        val seen = mutableListOf<WriteRequest>()
+        val writer =
+            object : TextWriter {
+                override val model = "Test"
+
+                override suspend fun write(request: WriteRequest): String {
+                    seen += request
+                    return ""
+                }
+            }
+        SkyRequestReader(writer).warmUp()
+        val asked = seen.single()
+        assertEquals("", asked.prompt)
+        assertEquals(REQUEST_SYSTEM, asked.system)
+        assertEquals(1, asked.maxTokens)
+    }
+
+    @Test
     fun theGrammarHasOneShapePerAction() {
         listOf("find", "describe", "advance", "toggle", "none", "name", "int", "setting").forEach {
             assertTrue(REQUEST_GRAMMAR.contains("$it ::="), it)
