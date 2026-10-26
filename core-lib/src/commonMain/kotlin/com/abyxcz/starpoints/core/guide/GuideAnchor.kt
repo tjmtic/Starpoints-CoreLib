@@ -3,13 +3,18 @@ package com.abyxcz.starpoints.core.guide
 private const val STAR_PREFIX = "star:"
 private const val CONSTELLATION_PREFIX = "constellation:"
 private const val TOPIC_PREFIX = "topic:"
+private const val DEEP_SKY_PREFIX = "deepsky:"
 
 /**
- * What a Guide entry is about: a catalog star, a constellation, or a free-floating topic with no
- * real object behind it. Content packs and prompts refer to an anchor by its [key].
+ * What a Guide entry is about: a catalog star, a constellation, a deep-sky object, or a
+ * free-floating topic with no real object behind it. Content packs and prompts refer to an anchor
+ * by its [key].
  */
 sealed interface GuideAnchor {
-    /** The anchor as text, e.g. `star:91262`, `constellation:Lyr` or `topic:the-tea-nebula`. */
+    /**
+     * The anchor as text, e.g. `star:91262`, `constellation:Lyr`, `deepsky:M31` or
+     * `topic:the-tea-nebula`.
+     */
     val key: String
 
     /** A catalog star, by its Hipparcos id (the catalog's star id). */
@@ -35,6 +40,16 @@ sealed interface GuideAnchor {
             get() = CONSTELLATION_PREFIX + id
     }
 
+    /** A deep-sky object, by its catalog id (`M31`). */
+    data class DeepSky(val id: String) : GuideAnchor {
+        init {
+            require(isIdText(id)) { "a deep-sky id has no whitespace or colon: '$id'" }
+        }
+
+        override val key: String
+            get() = DEEP_SKY_PREFIX + id
+    }
+
     /** A free-floating topic: a fictional place, era or being, by a short slug. */
     data class Topic(val slug: String) : GuideAnchor {
         init {
@@ -49,7 +64,7 @@ sealed interface GuideAnchor {
 /**
  * The anchor a [GuideAnchor.key] names, or null when the key is malformed. Only the canonical form
  * is accepted, the one [GuideAnchor.key] writes: a star id is a positive number with no sign or
- * leading zero, and a constellation id or topic slug has no whitespace or colon.
+ * leading zero, and a constellation or deep-sky id or a topic slug has no whitespace or colon.
  */
 fun parseAnchorKey(key: String): GuideAnchor? {
     val anchor =
@@ -62,6 +77,10 @@ fun parseAnchorKey(key: String): GuideAnchor? {
             key.startsWith(CONSTELLATION_PREFIX) ->
                 key.removePrefix(CONSTELLATION_PREFIX).takeIf(::isIdText)?.let {
                     GuideAnchor.Constellation(it)
+                }
+            key.startsWith(DEEP_SKY_PREFIX) ->
+                key.removePrefix(DEEP_SKY_PREFIX).takeIf(::isIdText)?.let {
+                    GuideAnchor.DeepSky(it)
                 }
             key.startsWith(TOPIC_PREFIX) ->
                 key.removePrefix(TOPIC_PREFIX).takeIf(::isIdText)?.let { GuideAnchor.Topic(it) }

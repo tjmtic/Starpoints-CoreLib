@@ -2,6 +2,7 @@ package com.abyxcz.starpoints.core.guide
 
 import com.abyxcz.starpoints.core.catalog.Constellation
 import com.abyxcz.starpoints.core.catalog.ConstellationFigure
+import com.abyxcz.starpoints.core.catalog.DeepSkyObject
 import com.abyxcz.starpoints.core.catalog.StarRecord
 import com.abyxcz.starpoints.core.presenter.colorName
 import com.abyxcz.starpoints.core.presenter.formatDeclination
@@ -10,6 +11,7 @@ import kotlin.math.abs
 import kotlin.math.roundToLong
 
 private const val HUNDREDTHS = 100L
+private const val TENTHS = 10L
 private const val HIP_PREFIX = "HIP "
 
 /**
@@ -24,7 +26,8 @@ private const val HIP_PREFIX = "HIP "
  * the core can put fiction into a fact sheet.
  *
  * @property anchor the object the facts are about.
- * @property title the object's name, or its designation when it has none.
+ * @property title the object's name, or its designation when it has none; a deep-sky object's name
+ *   is followed by its catalog id, as in "Andromeda (M31)".
  * @property facts the facts, in a fixed order.
  */
 @ConsistentCopyVisibility
@@ -86,6 +89,39 @@ fun constellationFactSheet(
     return FactSheet(GuideAnchor.Constellation(id), title, facts)
 }
 
+/**
+ * The fact sheet for the deep-sky object [dso], titled by its name and catalog id ("Andromeda
+ * (M31)"), or by the id alone when it has no name. Its magnitude keeps the catalog's one decimal.
+ */
+fun deepSkyFactSheet(dso: DeepSkyObject): FactSheet {
+    val facts = buildList {
+        dso.name?.let { add(Fact("name", it)) }
+        add(Fact("designation", dso.id))
+        dso.designation?.let { add(Fact("other designation", it)) }
+        add(Fact("type", dso.kind.description))
+        add(Fact("magnitude", tenths(dso.magnitude)))
+        if (dso.sizeArcminutes.isNotEmpty()) {
+            add(
+                Fact(
+                    "apparent size",
+                    dso.sizeArcminutes.joinToString(" \u00d7 ") { arcminutes(it) },
+                )
+            )
+        }
+        dso.classification?.let { add(Fact("class", it)) }
+        add(Fact("right ascension", formatRightAscension(dso.position.rightAscensionDegrees)))
+        add(Fact("declination", formatDeclination(dso.position.declinationDegrees)))
+    }
+    val title = dso.name?.let { "$it (${dso.id})" } ?: dso.id
+    return FactSheet(GuideAnchor.DeepSky(dso.id), title, facts)
+}
+
+/** An angle in arcminutes as `190′`, or `1.4′` when it is not a whole number. */
+private fun arcminutes(value: Double): String {
+    val text = tenths(value)
+    return text.removeSuffix(".0") + "\u2032"
+}
+
 /** A constellation label's position, as `18h 36m 00.0s, +30° 00′ 00″`. */
 private fun positionOf(part: Constellation): String =
     formatRightAscension(part.labelRaDegrees) + ", " + formatDeclination(part.labelDecDegrees)
@@ -97,6 +133,14 @@ private fun sharedWords(names: List<String>): String {
         words.first().indices.takeWhile { i -> words.all { it.getOrNull(i) == words.first()[i] } }
     return if (shared.isEmpty()) names.first()
     else words.first().take(shared.size).joinToString(" ")
+}
+
+/** [value] rounded to one decimal, as `3.4` or `-0.5`. */
+private fun tenths(value: Double): String {
+    val tenths = (value * TENTHS).roundToLong()
+    val sign = if (tenths < 0) "-" else ""
+    val size = abs(tenths)
+    return "$sign${size / TENTHS}.${size % TENTHS}"
 }
 
 /** [value] rounded to two decimals, as `0.03` or `-1.44`. */

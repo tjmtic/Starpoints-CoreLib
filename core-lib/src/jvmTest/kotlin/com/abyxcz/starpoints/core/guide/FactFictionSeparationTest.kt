@@ -148,6 +148,7 @@ class FactFictionSeparationTest {
                 GuideAnchor.Star::class.java,
                 GuideAnchor.Constellation::class.java,
                 GuideAnchor.Topic::class.java,
+                GuideAnchor.DeepSky::class.java,
             )
         assertTrue(reached.containsAll(anchors), "the walk missed an anchor kind: $reached")
     }
