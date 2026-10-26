@@ -11,6 +11,7 @@ class GuideAnchorTest {
         assertEquals("star:91262", GuideAnchor.Star(91262).key)
         assertEquals("constellation:Lyr", GuideAnchor.Constellation("Lyr").key)
         assertEquals("topic:the-tea-nebula", GuideAnchor.Topic("the-tea-nebula").key)
+        assertEquals("deepsky:M31", GuideAnchor.DeepSky("M31").key)
     }
 
     @Test
@@ -20,6 +21,7 @@ class GuideAnchorTest {
                 GuideAnchor.Star(91262),
                 GuideAnchor.Constellation("Ser"),
                 GuideAnchor.Topic("the-tea-nebula"),
+                GuideAnchor.DeepSky("M31"),
             )
         for (anchor in anchors) assertEquals(anchor, parseAnchorKey(anchor.key))
     }
@@ -37,6 +39,9 @@ class GuideAnchorTest {
         assertNull(parseAnchorKey("topic:the tea nebula"))
         assertNull(parseAnchorKey("constellation:"))
         assertNull(parseAnchorKey("topic: "))
+        assertNull(parseAnchorKey("deepsky:"))
+        assertNull(parseAnchorKey("deepsky:M 31"))
+        assertNull(parseAnchorKey("deepsky:M31:x"))
         assertNull(parseAnchorKey("planet:mars"))
         assertNull(parseAnchorKey(""))
     }
@@ -48,5 +53,7 @@ class GuideAnchorTest {
         assertFailsWith<IllegalArgumentException> { GuideAnchor.Constellation(" Lyr") }
         assertFailsWith<IllegalArgumentException> { GuideAnchor.Topic("the tea nebula") }
         assertFailsWith<IllegalArgumentException> { GuideAnchor.Topic("") }
+        assertFailsWith<IllegalArgumentException> { GuideAnchor.DeepSky("M 31") }
+        assertFailsWith<IllegalArgumentException> { GuideAnchor.DeepSky("") }
     }
 }
