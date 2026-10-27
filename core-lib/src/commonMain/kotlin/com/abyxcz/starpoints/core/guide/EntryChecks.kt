@@ -57,6 +57,9 @@ private val ENGLISH_WORDS =
 
 /** Below this share of [ENGLISH_WORDS], a body is not English. */
 private const val MIN_ENGLISH_SHARE = 0.1
+
+/** Shorter than this, a body is too little to tell its language ("Nice job, well done."). */
+private const val MIN_WORDS_FOR_LANGUAGE = 8
 private const val ENGLISH = "en"
 private val LETTERS = Regex("""[^\p{L}']+""")
 
@@ -113,7 +116,8 @@ fun checkEntry(body: String, voice: WriterVoice, sheet: FactSheet?): List<String
         if (stray.isNotEmpty())
             problems += "states ${stray.sorted()}, which the fact sheet does not"
     }
-    if (voice.language == ENGLISH && englishShare(body) < MIN_ENGLISH_SHARE) {
+    val judged = words >= MIN_WORDS_FOR_LANGUAGE
+    if (voice.language == ENGLISH && judged && englishShare(body) < MIN_ENGLISH_SHARE) {
         problems += "is not in English"
     }
     val plain = plainText(body)
