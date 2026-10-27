@@ -1,6 +1,9 @@
 package com.abyxcz.starpoints.core.presenter
 
 import com.abyxcz.starpoints.core.catalog.Constellation
+import com.abyxcz.starpoints.core.catalog.DeepSkyKind
+import com.abyxcz.starpoints.core.catalog.DeepSkyObject
+import com.abyxcz.starpoints.core.math.Equatorial
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -52,5 +55,34 @@ class SearchTest {
     fun limitCapsResults() {
         val results = search("v", names, constellations, limit = 2)
         assertEquals(2, results.size)
+    }
+
+    private val deepSky =
+        listOf(
+            DeepSkyObject(
+                "M31",
+                DeepSkyKind.SPIRAL_GALAXY,
+                Equatorial(10.68, 41.27),
+                3.4,
+                designation = "NGC 224",
+                name = "Andromeda",
+            ),
+            DeepSkyObject("M3", DeepSkyKind.GLOBULAR_CLUSTER, Equatorial(205.55, 28.38), 6.2),
+        )
+
+    @Test
+    fun findsADeepSkyObjectByNameIdOrDesignation() {
+        val andromeda = DeepSkyResult("M31", "Andromeda (M31)")
+        assertEquals(listOf(andromeda), search("andromeda", names, constellations, deepSky))
+        assertEquals(listOf(andromeda), search("ngc 224", names, constellations, deepSky))
+        assertEquals(
+            listOf(DeepSkyResult("M3", "M3"), andromeda),
+            search("m3", names, constellations, deepSky),
+        )
+    }
+
+    @Test
+    fun deepSkyIsLeftOutWhenNotGiven() {
+        assertEquals(emptyList(), search("andromeda", names, constellations))
     }
 }

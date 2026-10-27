@@ -1,12 +1,22 @@
 package com.abyxcz.starpoints.core.presenter
 
 import com.abyxcz.starpoints.core.catalog.Constellation
+import com.abyxcz.starpoints.core.catalog.DeepSkyObject
 
 sealed interface SearchResult
 
 data class StarResult(val id: Int, val name: String) : SearchResult
 
 data class ConstellationResult(val id: String, val name: String) : SearchResult
+
+/**
+ * A deep-sky object found by its catalog id ("M31"), its name ("Andromeda") or its other
+ * designation ("NGC 224").
+ *
+ * @property id the catalog id.
+ * @property name its name and id, as "Andromeda (M31)", or the id alone when it has no name.
+ */
+data class DeepSkyResult(val id: String, val name: String) : SearchResult
 
 private const val RANK_EXACT = 0
 private const val RANK_PREFIX = 1
@@ -24,6 +34,7 @@ fun search(
     query: String,
     names: Map<Int, String>,
     constellations: List<Constellation>,
+    deepSky: List<DeepSkyObject> = emptyList(),
     limit: Int = 20,
 ): List<SearchResult> {
     val q = query.trim().lowercase()
@@ -43,7 +54,14 @@ fun search(
                 Triple(rankOf(c.name.lowercase(), q), c.name, ConstellationResult(c.id, c.name))
             }
 
-    return (starMatches + constellationMatches)
+    val deepSkyMatches = deepSky.mapNotNull { dso ->
+        val label = dso.name?.let { "$it (${dso.id})" } ?: dso.id
+        val rank =
+            listOfNotNull(dso.id, dso.name, dso.designation).minOf { rankOf(it.lowercase(), q) }
+        if (rank == Int.MAX_VALUE) null else Triple(rank, label, DeepSkyResult(dso.id, label))
+    }
+
+    return (starMatches + constellationMatches + deepSkyMatches)
         .filter { it.first != Int.MAX_VALUE }
         .sortedWith(compareBy({ it.first }, { it.second.lowercase() }))
         .take(limit)
