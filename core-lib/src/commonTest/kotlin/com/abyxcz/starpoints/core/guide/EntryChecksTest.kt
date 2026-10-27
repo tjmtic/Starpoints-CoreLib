@@ -100,6 +100,12 @@ class EntryChecksTest {
     }
 
     @Test
+    fun aShortBodyIsTooLittleToJudgeItsLanguage() {
+        val english = plain.copy(language = "en", minWords = 1)
+        assertEquals(emptyList(), checkEntry("Nice job, well done.", english, vegaSheet))
+    }
+
+    @Test
     fun englishShareCountsCommonWords() {
         assertEquals(0.5, englishShare("The star is bright"))
         assertEquals(0.0, englishShare(""))
