@@ -9,6 +9,13 @@ style:
     # a series adds nothing but noise. Outside math/ the rule stands; tests are excluded by default.
     excludes: ['**/commonTest/**', '**/jvmTest/**', '**/iosTest/**', '**/core/math/**']
 
+complexity:
+  LongParameterList:
+    # A parameter with a default value adds nothing a caller must pass: an optional trailing
+    # parameter (visibleStars' magnitudeLimit, #39) is idiomatic Kotlin, not a long list.
+    # Required parameters still stop at 5 (Tim, 2026-10-02).
+    ignoreDefaultParameters: true
+
 naming:
   FunctionNaming:
     # Composables are PascalCase by convention.
